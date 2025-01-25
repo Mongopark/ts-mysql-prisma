@@ -1,0 +1,598 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model UserCategory {
+  id        String     @id @default(uuid())
+  category  Category
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userType  UserType[]
+}
+
+model UserType {
+  id             String       @id @default(uuid())
+  userCategoryId String
+  userCategory   UserCategory @relation(fields: [userCategoryId], references: [id])
+  createdAt      DateTime     @default(now())
+  type           UserTypes
+  user           User[]
+  updatedAt      DateTime     @updatedAt
+}
+
+model User {
+  id                          String                        @id @default(uuid())
+  firstName                   String
+  surName                     String
+  email                       String                        @unique
+  password                    String
+  phoneNumber                 String?
+  nin                         String?
+  gender                      String?
+  stateOfOrigin               String?
+  dob                         DateTime?
+  tenant                      Tenant?
+  landlord                    Landlord?
+  agent                       Agent?
+  profile                     Profile?
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+  SubAccount                  SubAccount?
+  PropertyHistory             PropertyHistory[]
+  UserType                    UserType[]
+  subscriptionType            SubscriptionType?
+  AdministrativeAccessOnUsers AdministrativeAccessOnUsers[]
+  tenantId                    String?
+  landlordId                  String?
+  UserOtp                     UserOtp?
+  Tenant                      Tenant[]                      @relation(name: "tenantCreatedBy")
+  changepassword              Boolean                       @default(false)
+  Agent                       Agent[]                       @relation(name: "agentCreatedBy")
+  landlords                   Landlord[]                    @relation(name: "landlordCreatedBy")
+  AuditLogs                   AuditLogs[]
+  state                       State?                        @relation(fields: [stateId], references: [id])
+  stateId                     String?
+  countrId                    String?
+  country                     Country?                      @relation(fields: [countrId], references: [id])
+  Lga                         Lga?                          @relation(fields: [lgaId], references: [id])
+  lgaId                       String?
+  Ward                        Ward?                         @relation(fields: [wardId], references: [id])
+  wardId                      String?
+
+  cdaId    String?
+  cda      Cda?    @relation(fields: [cdaId], references: [id])
+  streetId String?
+  street   Street? @relation(fields: [streetId], references: [id])
+}
+
+model UserOtp {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  otpcode   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model AdministrativeAccess {
+  id                          String                        @id @default(uuid())
+  accessName                  String
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+  AdministrativeAccessOnUsers AdministrativeAccessOnUsers[]
+}
+
+model AdministrativeAccessOnUsers {
+  id                     String               @id @default(uuid())
+  userId                 String
+  user                   User                 @relation(fields: [userId], references: [id])
+  administrationAccessId String
+  administrationAccess   AdministrativeAccess @relation(fields: [administrationAccessId], references: [id])
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+}
+
+model Profile {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  firstName String?
+  dob       DateTime?
+  surName   String?
+  image     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Tenant model
+model Tenant {
+  id String @id @default(uuid()) // Unique ID for each tenant
+
+  carpturNo String
+  email     String @unique
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  PropertyHistory PropertyHistory[]
+  onboardinStatus onboardingStatus
+  userId          String            @unique
+  User            User              @relation(fields: [userId], references: [id])
+  createdById     String
+  createdBy       User              @relation(name: "tenantCreatedBy", references: [id], fields: [createdById])
+
+  UtilityBill     UtilityBill[]
+  Transaction     Transaction[]
+  ApartMent       ApartMent[]
+  TenantApartment TenantApartment[]
+  UtilityTenant   UtilityTenant[]
+}
+
+model Agent {
+  id String @id @default(uuid()) // Unique ID for each tenant
+
+  carpturNo String
+  email     String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  onboardinStatus onboardingStatus
+  userId          String           @unique
+  User            User             @relation(fields: [userId], references: [id])
+
+  Property           Property[]
+  PropertyAssignment PropertyAssignment[]
+  createdById        String
+  createdBy          User                 @relation(name: "agentCreatedBy", references: [id], fields: [createdById])
+  Transaction        Transaction[]
+  Ward               Ward?
+  AgencyProfiling    AgencyProfiling?
+}
+
+model AgencyProfiling {
+  id                    String  @id @default(uuid())
+  state                 State   @relation(fields: [stateId], references: [id])
+  stateId               String
+  countrId              String
+  agentId               String  @unique
+  agent                 Agent?  @relation(fields: [agentId], references: [id])
+  country               Country @relation(fields: [countrId], references: [id])
+  Lga                   Lga     @relation(fields: [lgaId], references: [id])
+  lgaId                 String
+  Ward                  Ward    @relation(fields: [wardId], references: [id])
+  wardId                String  @unique
+  residentialStreetName String
+  cdaId                 String?
+  cda                   Cda?    @relation(fields: [cdaId], references: [id])
+  streetId              String?
+  street                Street? @relation(fields: [streetId], references: [id])
+  assignedWardId        String
+  asignedWard           Ward    @relation(name: "assignedWard", fields: [assignedWardId], references: [id])
+}
+
+// Landlord model
+model Landlord {
+  id    String @id @default(uuid())
+  email String @unique
+
+  properties         Property[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  carpturNo          String
+  onboardinStatus    onboardingStatus
+  userId             String               @unique
+  User               User                 @relation(fields: [userId], references: [id])
+  PropertyAssignment PropertyAssignment[]
+  Transaction        Transaction[]
+  createdById        String
+  createdBy          User                 @relation(name: "landlordCreatedBy", fields: [createdById], references: [id])
+}
+
+// Property model
+model Property {
+  id              String            @id @default(uuid())
+  address         String
+  landlord        Landlord          @relation(fields: [landlordId], references: [id])
+  landlordId      String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  agentId         String?
+  agent           Agent?            @relation(fields: [agentId], references: [id])
+  propertyStatus  VacancyStatus     @default(VACANT)
+  propertyImage   Json?
+  propertyUsage   PropertyUsage
+  propertyType    PropertyType
+  houseNo         String?
+  PropertyHistory PropertyHistory[]
+  state           State             @relation(fields: [stateId], references: [id])
+  stateId         String
+  countrId        String
+  country         Country           @relation(fields: [countrId], references: [id])
+  Lga             Lga               @relation(fields: [lgaId], references: [id])
+  lgaId           String
+  Ward            Ward              @relation(fields: [wardId], references: [id])
+  wardId          String
+
+  cdaId              String?
+  cda                Cda?                 @relation(fields: [cdaId], references: [id])
+  streetId           String?
+  street             Street?              @relation(fields: [streetId], references: [id])
+  PropertyAssignment PropertyAssignment[]
+
+  ApartMent ApartMent[]
+}
+
+model ApartMent {
+  id               String            @id @default(uuid())
+  propertyId       String
+  property         Property          @relation(fields: [propertyId], references: [id])
+  apartmentType    ApartmentType
+  detail           String
+  tenant           Tenant[]
+  TenantApartment  TenantApartment[]
+  utilityBill      UtilityBill[]
+  images           Json?
+  PublishApartment PublishApartment?
+  ProfileTenant    ProfileTenant[]
+}
+
+model TenantApartment {
+  id          String    @id @default(uuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  apartmentId String
+  startDate   DateTime
+  endDate     DateTime?
+  apartment   ApartMent @relation(fields: [apartmentId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PropertyAssignment {
+  id         String                   @id @default(uuid())
+  status     PropertyAssignmentStatus @default(PENDING)
+  landlordId String
+  landlord   Landlord                 @relation(fields: [landlordId], references: [id])
+  active     Boolean                  @default(false)
+  agentId    String
+  agent      Agent                    @relation(fields: [agentId], references: [id])
+  propertyId String
+  property   Property                 @relation(fields: [propertyId], references: [id])
+}
+
+model PublishApartment {
+  id           String    @id @default(uuid())
+  apartmentId  String    @unique
+  apartment    ApartMent @relation(fields: [apartmentId], references: [id])
+  basicRent    Decimal?
+  cautionFee   Decimal?
+  agentFee     Decimal?
+  legalFee     Decimal?
+  totalPackage Decimal?
+  renewalPrice Decimal?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  Feature      Feature[]
+}
+
+model Feature {
+  id                 String           @id @default(uuid())
+  publishApartmentId String
+  publishApartment   PublishApartment @relation(fields: [publishApartmentId], references: [id])
+  rooms              Int?
+  kitchen            Int?
+  bathroom           Int?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+}
+
+model Country {
+  id              String            @id @default(uuid())
+  name            String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  State           State[]
+  Property        Property[]
+  AgencyProfiling AgencyProfiling[]
+  User            User[]
+}
+
+model State {
+  id              String            @id @default(uuid())
+  name            String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Lga             Lga[]
+  property        Property[]
+  countryId       String
+  country         Country           @relation(fields: [countryId], references: [id])
+  AgencyProfiling AgencyProfiling[]
+  User            User[]
+}
+
+model Lga {
+  id              String            @id @default(uuid())
+  name            String
+  stateId         String
+  state           State             @relation(fields: [stateId], references: [id])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Ward            Ward[]
+  property        Property[]
+  AgencyProfiling AgencyProfiling[]
+  User            User[]
+}
+
+model Ward {
+  id              String            @id @default(uuid())
+  name            String
+  lgaId           String
+  lga             Lga               @relation(fields: [lgaId], references: [id])
+  property        Property[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  agentId         String?           @unique
+  agent           Agent?            @relation(fields: [agentId], references: [id])
+  Cda             Cda[]
+  hasCda          Boolean           @default(true)
+  AgencyProfiling AgencyProfiling?
+  agentWard       AgencyProfiling[] @relation(name: "assignedWard")
+  User            User[]
+}
+
+model Cda {
+  id              String            @id @default(uuid())
+  name            String
+  wardId          String
+  ward            Ward              @relation(fields: [wardId], references: [id])
+  hasStreet       Boolean           @default(true)
+  Street          Street[]
+  Property        Property[]
+  AgencyProfiling AgencyProfiling[]
+  User            User[]
+}
+
+model Street {
+  id              String            @id @default(uuid())
+  name            String
+  cdaId           String
+  cda             Cda               @relation(fields: [cdaId], references: [id])
+  Property        Property[]
+  AgencyProfiling AgencyProfiling[]
+  User            User[]
+}
+
+model PropertyHistory {
+  id          String   @id @default(uuid())
+  description String
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id])
+  agentId     String
+  agent       User     @relation(fields: [agentId], references: [id])
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UtilityBill {
+  id             String            @id @default(uuid())
+  utilityName    UtilityType
+  propertType    ApartmentType
+  amount         Decimal
+  dueDate        DateTime
+  renewalDate    DateTime
+  startDate      DateTime
+  payamentStatus TransactionStatus
+  tenantId       String
+  tenant         Tenant            @relation(fields: [tenantId], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  ApartMent      ApartMent         @relation(fields: [apartMentId], references: [id])
+  apartMentId    String
+  utilityTenant  UtilityTenant[]
+}
+
+model Utilities {
+  id            String          @id @default(uuid())
+  name          String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  UtilityTenant UtilityTenant[]
+}
+
+model UtilityTenant {
+  id            String      @id @default(uuid())
+  tenantId      String
+  tenant        Tenant      @relation(fields: [tenantId], references: [id])
+  utilityId     String
+  utility       Utilities   @relation(fields: [utilityId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  UtilityBill   UtilityBill @relation(fields: [utilityBillId], references: [id])
+  utilityBillId String
+}
+
+model SubAccount {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  subAmount      Decimal
+  expirationDate DateTime
+  renewalDate    DateTime
+  block          Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// model TenantHistory {
+//   id        String   @id @default(uuid())
+//   createdAt DateTime @default(now())
+
+//   updatedAt DateTime @updatedAt
+// }
+
+model Transaction {
+  id            String            @id @default(uuid())
+  utilityType   UtilityType
+  amount        Decimal
+  datePayed     DateTime
+  renewalDate   DateTime
+  apartmentType ApartmentType
+  status        TransactionStatus
+  tenantId      String?
+  tenant        Tenant?           @relation(fields: [tenantId], references: [id])
+  agentId       String?
+  agent         Agent?            @relation(fields: [agentId], references: [id])
+  landlordId    String?
+  landlord      Landlord?         @relation(fields: [landlordId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model ProfileTenant {
+  id                   String    @id @default(uuid())
+  tenantCarpturNo      String
+  name                 String
+  apartmentId          String
+  apartment            ApartMent @relation(fields: [apartmentId], references: [id])
+  rentType             RentType
+  basicRentAmount      Decimal
+  cautionFee           Decimal?
+  duration             Int
+  tenancyManagementFee Decimal?
+  legalFee             Decimal
+  tenamentFee          Decimal
+  totalPackage         Decimal
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model AuditLogs {
+  id           String       @id @default(uuid())
+  actorId      String
+  actor        User         @relation(fields: [actorId], references: [id])
+  action       String       @db.Text
+  actionStatus ActionStatus
+  module       String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([actorId])
+}
+
+// model ReportTenant {
+//   id        String   @id @default(uuid())
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+enum UtilityType {
+  RENT
+  ELECTRICITY
+  WATER_BILL
+  SECURITY_DUES
+  REFUSE_BILL
+  ESTATE_DUE
+}
+
+enum RentType {
+  SHORTLET
+  ANNUAL
+}
+
+enum ActionStatus {
+  SUCCESS
+  INFO
+  WARNING
+  DANGER
+}
+
+enum TransactionStatus {
+  FULL_PAYMENT
+  PART_PAYMENT
+}
+
+enum UserTypes {
+  TENANT
+  LANDLORD
+  AGENT
+  LAWFIRM
+  LOCALGOVT
+  SUPERADMIN
+  SUBADMIN
+}
+
+enum PropertyType {
+  Land
+  Bungalow
+  StoreyBuilding
+  ShoppingPlaza
+  Estate
+}
+
+enum PropertyUsage {
+  Personal
+  Commercial
+  Mixed
+}
+
+enum ApartmentType {
+  Shop
+  Room
+  Land
+  Hall
+  Room_Parlor
+  Two_Bed_Room_Flat
+  Three_Bed_Room_Flat
+  Four_Bed_Room_Flat
+  Duplex
+}
+
+enum VacancyStatus {
+  VACANT
+  OCCUPIED
+}
+
+enum onboardingStatus {
+  Profile
+  account
+  property
+  agencyCoverage
+  completed
+}
+
+enum PropertyAssignmentStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum Category {
+  AUDIENCE
+  VENDOR
+  MARKETPLACE
+}
+
+enum SubscriptionType {
+  FREE
+  PREMIUM
+  BASIC
+  STANDARD
+  ENTERPRISE
+}

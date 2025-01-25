@@ -1,0 +1,45 @@
+# Base image for building the application
+FROM node:20-alpine3.20 AS builder
+WORKDIR /app
+
+# Install dependencies
+COPY . .
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+# Copy the entire project including the Prisma schema
+
+#Migrate Prisma Client
+RUN yarn prisma migrate dev
+
+# Generate Prisma client
+
+RUN yarn prisma generate
+
+# Build the application
+RUN yarn build
+
+# Temporary command to list contents of the prisma folder
+RUN ls -la prisma
+
+RUN mkdir -p dist/views && cp -R ./views ./dist/views
+# Base image for the production environment
+FROM node:20-alpine3.20 AS production
+WORKDIR /app
+
+# Copy only necessary files and folders from the builder stage
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/views   ./dist/views
+
+COPY --from=builder /app/prisma ./prisma 
+
+# Expose port
+EXPOSE 4000
+
+# Command to run the application
+CMD ["node", "dist/index.js"]
+
+
+
+
