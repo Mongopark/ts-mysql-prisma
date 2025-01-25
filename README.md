@@ -29,12 +29,12 @@ npm run db:deploy
 npm run dev
 ```
 
-### Your App Is Ready!
+### Your App is Ready!
 
-#### step 6; visit the app locally on your browser at localhost:8080
+#### step 6; visit the app locally on your browser at localhost:5500
 http://localhost:5500/api/v1
 
-#### step 7; visit the app swagger documentation on your browser at localhost:8080
+#### step 7; visit the app swagger documentation on your browser at localhost:5500
 http://localhost:5500/api/v1/swagger
 
 #### step 8; alternatively visit the app on your browser at https://carptur-api-typescript.onrender.com/api/v1
