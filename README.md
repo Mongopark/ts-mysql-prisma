@@ -4,7 +4,7 @@ Express Ts MySQL Prisma Server SetUp
 
 
 
-# How to run the app locally in 5 steps
+# How to run the app locally in 4 steps
 
 #### step 1; create and populate your .env file with the samples from the .env.example file
 
@@ -19,12 +19,7 @@ npm run build
 npm run migrate
 ```
 
-#### step 4; skip this step in development; When it is time for production, the prisma migrate will be 'npm run db:deploy', used to deploy the database
-``` bash
-npm run db:deploy
-```
-
-#### step 5; Run your webapp in the terminal with 'npm run dev'
+#### step 4; Run your webapp in the terminal with 'npm run dev'
 ``` bash
 npm run dev
 ```
@@ -57,5 +52,20 @@ npm run migrate
 npm run dev
 
 ```
+
+
+
+## Other Commands
+
+#### step 1; production setting; When it is time for production, the prisma migrate will be 'npm run db:deploy', used to deploy the database
+``` bash
+npm run db:deploy
+```
+
+#### step 2; update the database migration; After migrating the database, if there are any new changes to the database schema, run 'npx prisma db push', used to update the database in development
+``` bash
+npx prisma db push
+```
+
 
 # express-ts-mysql-prisma-server-setup
