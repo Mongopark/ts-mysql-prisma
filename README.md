@@ -70,18 +70,18 @@ npx prisma db push
 
 
 
-## Upgrading an Old Project such as this
-# Step 1: Check what's outdated
+# Upgrading an Old Project such as this
+### Step 1: Check what's outdated
 npm outdated
 
-# Step 2: Upgrade to latest versions in package.json
+### Step 2: Upgrade to latest versions in package.json
 npx npm-check-updates -u
 
-# Step 3: Reinstall cleanly
+### Step 3: Reinstall cleanly
 rm -rf node_modules package-lock.json
 npm install
 
-# Step 4: Rebuild your project
+### Step 4: Rebuild your project
 npm run build
 
 
